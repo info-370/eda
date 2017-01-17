@@ -1,108 +1,163 @@
 # Exploratory data analysis 
 
-# Set up
+# Set up (install packages if you don't have them)
 library(dplyr)
+library(tidyr)
 library(ggplot2)
 library(plotly)
 library(vioplot)
 setwd('~/Documents/info-370/eda/health-burden/')
-health.data <- read.csv('./data/prepped/burden-data.csv', stringsAsFactors = FALSE)
+risk.data <- read.csv('./data/prepped/risk-data.csv', stringsAsFactors = FALSE) 
 
 ######################
 ### Data Structure ###
 ######################
 
+## Using a variety of functions, investigate the structure of your data
+
 # Dimensions of the data
-dim(health.data)
+dim(risk.data)
 
 # Column names
-colnames(health.data)
+colnames(risk.data)
 
 # Structure of the data
-str(health.data)
+str(risk.data)
 
 # Summary of each column
-summary(health.data)
-
-# Check that percents are in the proper range
-health.data %>% select(contains('percent')) %>% summary()
+summary(risk.data)
 
 # See data (in RStudio)
-View(health.data)
+View(risk.data)
 
 # Test if first 6 columns uniquely identify each row
-which(duplicated(health.data[1:6],)) 
+which(duplicated(risk.data[1:6],)) 
 
-# See which causes are present
-unique(health.data$cause)
-
-# Which columns take on an NA value?
-health.data %>% filter()
+# See which ages are present
+unique(risk.data$age)
 
 # Replace NAs as 0s
-health.data[is.na(health.data)] <- 0
+risk.data[is.na(risk.data)] <- 0
 
 ###########################
 ### Univariate Analysis ###
 ###########################
 
+## Using a variety of approaches, investigate the structure each (risk column) individually
+
 # Summarize
-summary(health.data[,8:ncol(health.data)])
-hist(health.data$deaths.rate)
+summary(risk.data[,8:ncol(risk.data)])
+hist(risk.data$deaths.rate)
  
 # Histograms
-hist(health.data$dalys.number) # Not super helpful
-hist(health.data$dalys.percent) # Still not super helpful
-hist(health.data$dalys.rate) # Still not super helpful
+hist(risk.data$drug.use) 
+hist(risk.data$high.meat)
+hist(risk.data$low.exercise)
+hist(risk.data$smoking)
+hist(risk.data$alcohol.use) # wait, what...?
 
-# Boxplots by age
-boxplot(deaths.rate ~ age, data = health.data, las=2)
+# Violin plot for each variable
+vioplot(
+        risk.data$smoking, 
+        risk.data$alcohol.use, 
+        risk.data$drug.use,
+        risk.data$high.meat,
+        risk.data$low.exercise, 
+        names=c('Smoking', 'Alcohol', 'Drugs', 'Meat', 'Low Exercise')
+        )
+
+# Boxplots for each variable (need to reshape first)
+long.data <- gather(risk.data, risk, value, smoking, alcohol.use, drug.use, high.meat, low.exercise)
+boxplot(value ~ risk, data = long.data, las=2)
+
+
+####################################
+### Univariate Analysis (by age) ###
+####################################
+
+# Investiage how each risk-variable varies by **age group**
+
+# Boxplot by age
+boxplot(smoking ~ age, data = risk.data, las=2)
 
 # Violin plot by age
-under.5 <- health.data %>% filter(age == "Under 5", !is.na(deaths.rate))
-young.age <- health.data %>% filter(age == "5-14 years", !is.na(deaths.rate))
-low.age <- health.data %>% filter(age == "15-49 years", !is.na(deaths.rate))
-mid.age <- health.data %>% filter(age == "50-69 years", !is.na(deaths.rate))
-old.age <- health.data %>% filter(age == "70+ years", !is.na(deaths.rate))
-vioplot(under.5$deaths.rate, 
-        young.age$deaths.rate, 
-        low.age$deaths.rate, 
-        mid.age$deaths.rate, 
-        old.age$deaths.rate, 
-        names=c('Under 5', '5-14', '15-49','50-69', '70+'))
-
-# Check histograms for only one cause/age combination
-stomach <- health.data %>% 
-    filter(cause == "Stomach cancer", age == '50-69 years')
-
-hist(stomach$deaths.rate)
-View(stomach)
+low.age <- risk.data %>% filter(age == "15-49 years")
+mid.age <- risk.data %>% filter(age == "50-69 years")
+old.age <- risk.data %>% filter(age == "70+ years")
+vioplot(
+  low.age$smoking, 
+  mid.age$smoking, 
+  old.age$smoking, 
+  names=c('15-49','50-69', '70+'))
 
 # Histograms by age
-p <- qplot(dalys.rate, data = health.data, geom = "histogram", binwidth = 1000)
+p <- qplot(smoking, data = risk.data, geom = "histogram")
 p + facet_wrap(~ age)
 
-p <- qplot(ylls.rate, data = health.data, geom = "histogram", binwidth = 1000)
+p <- qplot(alcohol.use, data = risk.data, geom = "histogram")
 p + facet_wrap(~ age)
 
-p <- qplot(ylls.rate, data = health.data, geom = "histogram", binwidth = 1000)
+p <- qplot(high.meat, data = risk.data, geom = "histogram")
 p + facet_wrap(~ age)
 
-# YLLs v.s deaths (this should be a very strong correlation)
-plot(health.data$deaths.rate, health.data$ylls.rate) # What are those concentrations?
-plot(log(health.data$deaths.rate), log(health.data$ylls.rate)) # What are those concentrations?
+p <- qplot(low.exercise, data = risk.data, geom = "histogram")
+p + facet_wrap(~ age)
+
+p <- qplot(drug.use, data = risk.data, geom = "histogram")
+p + facet_wrap(~ age)
+
+####################################
+### Univariate Analysis (by sex) ###
+####################################
+
+# Investiage how each risk-variable varies by **sex**
+
+# Histograms by sex
+p <- qplot(smoking, data = risk.data, geom = "histogram")
+p + facet_wrap(~ sex)
+
+p <- qplot(alcohol.use, data = risk.data, geom = "histogram")
+p + facet_wrap(~ sex)
+
+p <- qplot(high.meat, data = risk.data, geom = "histogram")
+p + facet_wrap(~ sex)
+
+p <- qplot(low.exercise, data = risk.data, geom = "histogram")
+p + facet_wrap(~ sex)
+
+p <- qplot(drug.use, data = risk.data, geom = "histogram")
+p + facet_wrap(~ sex)
+
+# Compare male to female values -- requires reshaping (and dropping population)!
+wide.by.sex <- long.data %>% 
+                select(-pop) %>% 
+                spread(sex, value)
+
+plot(wide.by.sex$male, wide.by.sex$female)
 
 # Get hovers via plotly
-p <- plot_ly(data = health.data, x = ~deaths.rate, y = ~ylls.rate, 
-             text = ~paste("Cause: ", cause, '<br>Country:', country))
+p <- plot_ly(data = wide.by.sex, x = ~male, y = ~female, 
+             text = ~paste("Risk: ", risk,
+                           '<br>Country:', country,
+                           '<br>Age:', age
+                           ))
 p
 
+########################################
+### Univariate Analysis (by country) ###
+########################################
+
+## Investiage how each risk-variable varies by **country**
+
+# Aggregate by country
+by.country <- risk.data %>% 
+              group_by(country, country.code) %>% 
+              summarize(smoking = sum(smoking * pop), pop=sum(pop)) %>% 
+              ungroup() %>% 
+              mutate(smoking.rate = smoking / pop)
+              
 # Choropleth map (see https://plot.ly/r/choropleth-maps/)
-# Map only malaria deaths
-malaria <- health.data %>% 
-            filter(cause == 'Malaria', age=="All Ages", sex=="Male") %>% 
-            mutate(deaths.rate = replace(deaths.rate, is.na(deaths.rate), 0))
-            
+
 l <- list(color = toRGB("grey"), width = 0.5)
     
 # specify map projection/options
@@ -112,22 +167,22 @@ g <- list(
   projection = list(type = 'Mercator')
 )
 
-p <- plot_geo(malaria) %>%
+p <- plot_geo(by.country) %>%
   add_trace(
-    z = ~deaths.rate, color = ~deaths.rate, colors = 'Blues',
+    z = ~smoking.rate, color = ~smoking.rate, colors = 'Blues',
     text = ~country, locations = ~country.code, marker = list(line = l)
   ) %>%
-  colorbar(title = '# of malaria deaths') %>%
+  colorbar(title = 'Smoking Death Rate') %>%
   layout(
-    title = 'Malaria Deahts',
+    title = 'Smoking Death Rates',
     geo = g
   )
 
 p
 
-# Which diseases cause more disability than years of life lost (aggregate!)
-cause.data <- health.data %>% 
-              group_by(cause) %>% 
-              summarize(deaths = sum(deaths.number), ylls = sum(ylls.number), ylds = sum(ylds.number))
+###########################
+### Bivariate Analysis ####
+###########################
 
-unique(health.data %>% filter(ylds.rate > ylls.rate) %>% select(cause, age))
+# Compare risks-variables to one another
+pairs(risk.data[,8:ncol(risk.data)])
