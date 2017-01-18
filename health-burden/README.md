@@ -1,6 +1,6 @@
 # Health Burden
 
-To practice performing exploratory data analysis, you'll conduct an investigation of a dataset from the [Global Burden of Disease Study](http://www.healthdata.org/gbd). The data was downloaded from this [web tool]() with this specific [configuration](http://ghdx.healthdata.org/gbd-results-tool?params=querytool-permalink/691e5f887d1df5b76b46f9d1ed315b5d).
+To practice performing exploratory data analysis, you'll conduct an investigation of a dataset from the [Global Burden of Disease Study](http://www.healthdata.org/gbd). The data was downloaded from this [web tool](http://ghdx.healthdata.org/gbd-results-tool) with this specific [configuration](http://ghdx.healthdata.org/gbd-results-tool?params=querytool-permalink/691e5f887d1df5b76b46f9d1ed315b5d).
 
 Additional data downloaded from:
 
